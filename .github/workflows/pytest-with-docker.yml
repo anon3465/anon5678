@@ -1,0 +1,41 @@
+name: Pytest with Docker environment
+# workflow triggered by any push on any branch
+on:
+  push:
+    paths:
+      - 'dinc_ensemble/**'
+  pull_request:
+    paths:
+      - 'dinc_ensemble/**'
+jobs:
+  build-test:
+    name: Pytest in Docker environment
+    # runs on the latest Ubuntu
+    runs-on: ubuntu-latest 
+    # runs within your Docker container
+    container:
+      image: docker://ac121/dinc-ensemble:latest
+      env:
+        ENV_NAME: dinc-ensemble
+      options: --user root
+      
+    # checkout your code from your repository
+    # and runs pytest in your pipenv environment
+    steps:
+    - name: Check loction
+      run: echo $(pwd) && echo $(ls)
+    - name: Update PATH
+      run: export PATH=$PATH:/opt/conda/envs/dinc-ensemble/bin
+    - name: Git symlink
+      run: ln -s /opt/conda/envs/dinc-ensemble/bin/git /usr/bin/git
+    - name: Git safe directory
+      run: git config --global --add safe.directory /__w/dinc-ensemble/dinc-ensemble
+    - name: Sparse checkout 
+      uses: snow-actions/sparse-checkout@v1.2.0
+      with:
+        patterns: ./dinc_ensemble/
+    - name: Check the checkout
+      run: echo $(ls)
+    - name: Pytest!
+      run: /opt/conda/envs/dinc-ensemble/bin/pytest ./dinc_ensemble
+    
